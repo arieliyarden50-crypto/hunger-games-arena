@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARENA — משחקי ההישרדות</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0; font-family:Arial, sans-serif; color:#f5e9c9;
+  background:radial-gradient(circle at top,#3a1d12 0,#17100d 42%,#090807 100%);
+  min-height:100vh;
+}
+header{text-align:center;padding:35px 16px 20px;border-bottom:1px solid #7b5a2e}
+h1{margin:0;font-size:clamp(38px,8vw,72px);letter-spacing:6px}
+.subtitle{color:#c9a96a;margin-top:8px}
+nav{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:16px}
+nav button,.main-btn{
+  border:1px solid #b88a3c;background:#211711;color:#f5e9c9;
+  padding:12px 18px;border-radius:8px;cursor:pointer;font-weight:bold
+}
+nav button:hover,.main-btn:hover{background:#4a2918}
+main{max-width:1000px;margin:auto;padding:10px 16px 50px}
+.section{
+  display:none;background:rgba(15,11,9,.86);border:1px solid #6e4d26;
+  border-radius:16px;padding:24px;margin-top:18px;box-shadow:0 10px 35px #0008
+}
+.section.active{display:block}
+h2{text-align:center;font-size:32px;margin-top:0;color:#d7b56b}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:650px;margin:20px auto}
+input{
+ width:100%;padding:14px;border-radius:8px;border:1px solid #76552b;
+ background:#0d0b09;color:#fff;font-size:16px;text-align:center
+}
+.actions{text-align:center;margin:20px}
+.main-btn{font-size:18px;padding:14px 28px}
+.battles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:25px}
+.battle{
+ background:linear-gradient(145deg,#2a1a12,#120e0b);border:1px solid #9a7035;
+ border-radius:12px;padding:22px;text-align:center
+}
+.battle .arena{color:#c9a96a;font-weight:bold;margin-bottom:15px}
+.fighter{font-size:20px;font-weight:bold;padding:8px}
+.vs{color:#b33b28;font-size:25px;font-weight:bold}
+.event-box{
+ min-height:220px;display:flex;align-items:center;justify-content:center;
+ text-align:center;border:1px solid #9a7035;border-radius:15px;
+ background:radial-gradient(circle,#3a2015,#100c09);padding:25px;
+ font-size:clamp(24px,5vw,42px);font-weight:bold;line-height:1.35
+}
+.hint{text-align:center;color:#bba77d;margin-top:10px}
+@media(max-width:700px){
+ .grid{grid-template-columns:1fr}
+ .battles{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>ARENA</h1>
+  <div class="subtitle">משחקי ההישרדות</div>
+</header>
+
+<nav>
+  <button onclick="showSection('arena1')">🏟️ הארנה הראשונה</button>
+  <button onclick="showSection('events')">🌩️ אירועי הארנה</button>
+  <button onclick="showSection('pairs')">⚔️ חלוקת קרבות</button>
+</nav>
+
+<main>
+<section id="arena1" class="section active">
+  <h2>🏟️ הארנה הראשונה</h2>
+  <p class="hint">הכניסו את שמות ששת המתמודדים וחלקו אותם לשלוש זירות קרב.</p>
+  <div class="grid">
+    <input id="a1" placeholder="מתמודד 1">
+    <input id="a2" placeholder="מתמודד 2">
+    <input id="a3" placeholder="מתמודד 3">
+    <input id="a4" placeholder="מתמודד 4">
+    <input id="a5" placeholder="מתמודד 5">
+    <input id="a6" placeholder="מתמודד 6">
+  </div>
+  <div class="actions"><button class="main-btn" onclick="drawSix()">🎲 הגרל קרבות</button></div>
+  <div id="sixResults" class="battles"></div>
+</section>
+
+<section id="events" class="section">
+  <h2>🌩️ אירועי הארנה</h2>
+  <p class="hint">בכל פעם שתלחצו, אירוע אחד יוגרל באקראי.</p>
+  <div id="eventBox" class="event-box">לחצו על הכפתור כדי לגלות מה קרה...</div>
+  <div class="actions"><button class="main-btn" onclick="drawEvent()">🎲 הגרל אירוע</button></div>
+</section>
+
+<section id="pairs" class="section">
+  <h2>⚔️ חלוקת קרבות</h2>
+  <p class="hint">הכניסו ארבעה מתמודדים וחלקו אותם לשני זוגות.</p>
+  <div class="grid">
+    <input id="p1" placeholder="מתמודד 1">
+    <input id="p2" placeholder="מתמודד 2">
+    <input id="p3" placeholder="מתמודד 3">
+    <input id="p4" placeholder="מתמודד 4">
+  </div>
+  <div class="actions"><button class="main-btn" onclick="drawFour()">🎲 חלק לזוגות</button></div>
+  <div id="fourResults" class="battles" style="grid-template-columns:repeat(2,1fr)"></div>
+</section>
+</main>
+
+<script>
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function shuffle(arr){
+  let a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function getValues(ids){
+  return ids.map(id=>document.getElementById(id).value.trim());
+}
+function battleCard(num,a,b){
+  return `<div class="battle"><div class="arena">זירת קרב ${num}</div>
+    <div class="fighter">${escapeHtml(a)}</div><div class="vs">⚔️</div>
+    <div class="fighter">${escapeHtml(b)}</div></div>`;
+}
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+function drawSix(){
+  const names=getValues(['a1','a2','a3','a4','a5','a6']);
+  if(names.some(n=>!n)){alert('יש למלא את כל ששת השמות.');return;}
+  const a=shuffle(names);
+  document.getElementById('sixResults').innerHTML=
+    battleCard(1,a[0],a[1])+battleCard(2,a[2],a[3])+battleCard(3,a[4],a[5]);
+}
+const events=[
+'🌧️ גשם חומצי תקף את מתמודד הביצה!',
+'🐒 מתקפת קופים על מתמודד היער!',
+'🐺 מתקפת זאבים על אי הדמים!',
+'🐝 מתקפת צרעות על מתמודד המדבר!'
+];
+function drawEvent(){
+  const box=document.getElementById('eventBox');
+  box.textContent='🎲 ...';
+  setTimeout(()=>{box.textContent=events[Math.floor(Math.random()*events.length)]},450);
+}
+function drawFour(){
+  const names=getValues(['p1','p2','p3','p4']);
+  if(names.some(n=>!n)){alert('יש למלא את כל ארבעת השמות.');return;}
+  const a=shuffle(names);
+  document.getElementById('fourResults').innerHTML=
+    battleCard(1,a[0],a[1])+battleCard(2,a[2],a[3]);
+}
+</script>
+</body>
+</html>
